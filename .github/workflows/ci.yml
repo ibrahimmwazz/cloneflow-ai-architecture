@@ -1,0 +1,54 @@
+name: CloneFlow AI — Architecture, RAG & LLMOps CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  backend-and-ai-eval:
+    name: PyTest & LLMOps Evaluation Gate
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+          cache-dependency-path: api/requirements.txt
+
+      - name: Install backend & test dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r api/requirements.txt
+          pip install pytest pytest-asyncio httpx
+
+      - name: Compile-check Python modules & GPU workers
+        run: python -m compileall -q api modal_worker.py scripts
+
+      - name: Run RAG, Agent, Guardrails & API Security Suite
+        run: pytest -v
+
+      - name: Run Automated LLMOps Evaluation CLI
+        run: python scripts/eval_ai_pipeline.py
+
+  security-scan:
+    name: Trivy Vulnerability & Secret Scan
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run Trivy filesystem security scan
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          scanners: 'vuln,misconfig,secret'
+          severity: 'CRITICAL,HIGH'
+          format: 'table'
+          exit-code: '0'

@@ -1,0 +1,35 @@
+app = "ai-clone"
+primary_region = "ams"
+
+[build]
+  dockerfile = "Dockerfile.api"
+
+[env]
+  PORT = "8000"
+  MODAL_DUBBING_URL = "https://ibrahimmustaphawaziri334--cloneflow-worker-web.modal.run/trigger_dubbing"
+  MODAL_HEALTH_URL = "https://ibrahimmustaphawaziri334--cloneflow-worker-web.modal.run/health"
+  MODAL_HUNYUAN_URL = "https://ibrahimmustaphawaziri334--cloneflow-worker-web.modal.run/trigger_hunyuan_video"
+  MODAL_IMAGEGEN_URL = "https://ibrahimmustaphawaziri334--cloneflow-worker-web.modal.run/trigger_image_gen"
+  MODAL_IMGGEN_URL = "https://ibrahimmustaphawaziri334--cloneflow-worker-web.modal.run/trigger_image_gen"
+  MODAL_STITCH_URL = "https://ibrahimmustaphawaziri334--cloneflow-worker-web.modal.run/trigger_stitch_video"
+  MODAL_VIDGEN_URL = "https://ibrahimmustaphawaziri334--cloneflow-worker-web.modal.run/trigger_video_gen"
+  MODAL_WORKER_URL = "https://ibrahimmustaphawaziri334--cloneflow-worker-web.modal.run/trigger_job"
+
+[http_service]
+  internal_port = 8000
+  force_https = true
+  auto_stop_machines = false
+  auto_start_machines = true
+  min_machines_running = 1
+  processes = ["app"]
+
+  [[http_service.checks]]
+    grace_period = "10s"
+    interval = "15s"
+    method = "GET"
+    timeout = "5s"
+    path = "/health"
+
+[machines]
+  # Shared CPU, 512MB RAM — adequate for FastAPI + async I/O (no ML on this node)
+  size = "shared-cpu-1x"
